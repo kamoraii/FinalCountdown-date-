@@ -19,12 +19,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
-  overflow-x: hidden;
 }
 .countdown-container {
-  position: relative;
-  z-index: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -32,24 +28,16 @@ body {
   padding: 25px;
   border-radius: 16px;
   width: 90%;
-  max-width: 350px;
+  max-width: 400px;
   text-align: center;
   box-shadow: 0 0 20px rgba(255,255,255,0.05);
 }
-.time-remaining {
-  font-size: 3rem;
-  color: #FFFFFF;
-  margin-bottom: 10px;
-}
-.target-time {
-  font-size: 1.2rem;
-  color: #9CA3AF;
-  margin-bottom: 10px;
-}
+.time-remaining { font-size: 3rem; color: #FFFFFF; margin-bottom: 10px; }
+.target-time { font-size: 1.2rem; color: #9CA3AF; margin-bottom: 10px; }
 #eventName { color: #FFD700; margin-bottom: 10px; }
-#eventImage { width: 100px; margin-bottom: 15px; border-radius: 12px; }
+#eventImage { width: 120px; margin-bottom: 15px; border-radius: 12px; }
 
-/* Pop-up pour choisir l’heure */
+/* Pop-up */
 .time-picker-popup {
   position: fixed;
   top: 50%;
@@ -69,39 +57,15 @@ body {
 }
 .time-picker-popup.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
 .time-picker-popup input {
-  font-size: 1rem;
-  padding: 8px;
-  border-radius: 8px;
-  border: none;
-  text-align: center;
-  width: 150px;
+  font-size: 1rem; padding: 8px; border-radius: 8px; border: none; text-align: center; width: 150px;
 }
 .time-picker-popup button {
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-weight: bold;
-  border: none;
-  cursor: pointer;
-  color: #fff;
-  background-color: #3B82F6;
+  padding: 10px 16px; border-radius: 8px; font-weight: bold; border: none; cursor: pointer; color: #fff; background-color: #3B82F6;
 }
 
 /* Boutons principaux */
-.buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-}
-.buttons button {
-  padding: 14px;
-  border: none;
-  border-radius: 10px;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: opacity 0.2s ease, transform 0.1s ease;
-}
+.buttons { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+.buttons button { padding: 14px; border: none; border-radius: 10px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: opacity 0.2s ease, transform 0.1s ease; }
 .buttons button:hover, .buttons button:active { opacity: 0.85; transform: scale(0.98); }
 .btn-primary { background-color: #3B82F6; color: #FFFFFF; }
 .btn-secondary { background-color: #22C55E; color: #FFFFFF; }
@@ -119,7 +83,6 @@ body {
 </head>
 
 <body>
-
 <div class="countdown-container">
   <div class="time-remaining" id="timeRemaining">00:00:00</div>
   <div class="target-time" id="targetTime">CIBLE : --:--</div>
@@ -128,21 +91,22 @@ body {
   <img id="eventImage" src="" alt="Image événement">
 
   <div class="buttons">
-    <button class="btn-primary" onclick="showTimePicker()">CHOISIR L’HEURE</button>
+    <button class="btn-primary" onclick="showTimePicker()">CHOISIR HEURE</button>
     <button class="btn-secondary" onclick="startCountdownManual()">START MANUEL</button>
     <button class="btn-tertiary" onclick="resetCountdown()">RESET</button>
     <button class="btn-switch" onclick="switchMode()">SWITCH MODE</button>
-    <button class="btn-primary" onclick="loadEventFromAPI()">CHARGER API</button>
+    <button class="btn-primary" onclick="loadEventFromAPI(0)">CHARGER API 1</button>
+    <button class="btn-primary" onclick="loadEventFromAPI(1)">CHARGER API 2</button>
   </div>
 </div>
 
-<!-- Pop-up flottant pour saisir l'heure -->
+<!-- Pop-up flottant -->
 <div class="time-picker-popup" id="timePickerPopup">
   <input type="time" id="timeInput">
   <button onclick="confirmTime()">Valider</button>
 </div>
 
-<!-- Inclure le script.js -->
+<!-- Script JS -->
 <script src="script.js"></script>
 </body>
 </html>
