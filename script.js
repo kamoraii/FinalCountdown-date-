@@ -18,11 +18,8 @@ window.addEventListener('load', () => {
   }
 
   // Démarrer le compte actif si présent
-  if (mode === "manuel" && targetDateManual) {
-    startCountdown();
-  } else if (mode === "api" && targetDateAPI) {
-    startCountdown();
-  }
+  if (mode === "manuel" && targetDateManual) startCountdown();
+  else if (mode === "api" && targetDateAPI) startCountdown();
 });
 
 // --- 2️⃣ Charger l'événement depuis JSON API ---
@@ -32,7 +29,7 @@ async function loadEventFromAPI() {
     const data = await response.json();
     const actifs = data.filter(ev => ev.active);
     if (actifs.length === 0) return;
-    const evenement = actifs[0]; // prendre le premier actif
+    const evenement = actifs[0];
 
     document.getElementById("eventName").textContent = evenement.name;
     document.getElementById("eventImage").src = evenement.image;
@@ -40,39 +37,52 @@ async function loadEventFromAPI() {
     targetDateAPI = new Date(evenement.date);
     localStorage.setItem('targetDateAPI', targetDateAPI.toString());
 
-    if (mode === "api") startCountdown();
+    // --- 3️⃣ Bascule automatique sur mode API ---
+    mode = "api";
+    startCountdown();
   } catch (e) {
     console.error("Erreur API:", e);
   }
 }
 
-// --- 3️⃣ Mise à jour affichage compte à rebours ---
+// --- 4️⃣ Mise à jour affichage compte à rebours ---
 function updateDisplay() {
   const display = document.getElementById("timeRemaining");
-  if (!getActiveTargetDate()) { display.textContent = "00:00:00"; return; }
+  const target = getActiveTargetDate();
+  if (!target) { display.textContent = "00:00:00"; return; }
 
   const now = new Date();
-  let diff = getActiveTargetDate() - now;
+  let diff = target - now;
   if (diff <= 0) {
     display.textContent = "00:00:00";
     clearInterval(countdownInterval);
     return;
   }
+
   const jours = Math.floor(diff / 1000 / 3600 / 24);
   const heures = Math.floor((diff / 1000 / 3600) % 24);
   const minutes = Math.floor((diff / 1000 / 60) % 60);
   const secondes = Math.floor((diff / 1000) % 60);
   display.textContent = `${jours}j ${heures}h ${minutes}m ${secondes}s`;
+
+  // Mettre à jour le texte cible pour API ou manuel
+  if (mode === "manuel") {
+    document.getElementById("targetTime").textContent =
+      "CIBLE : " + targetDateManual.toLocaleString();
+  } else {
+    document.getElementById("targetTime").textContent =
+      "CIBLE : " + targetDateAPI.toLocaleString();
+  }
 }
 
-// --- 4️⃣ Démarrer le compte à rebours ---
+// --- 5️⃣ Démarrer le compte à rebours ---
 function startCountdown() {
   clearInterval(countdownInterval);
   updateDisplay();
   countdownInterval = setInterval(updateDisplay, 1000);
 }
 
-// --- 5️⃣ Reset ---
+// --- 6️⃣ Reset ---
 function resetCountdown() {
   clearInterval(countdownInterval);
   if (mode === "manuel") {
@@ -89,7 +99,7 @@ function resetCountdown() {
   hideTimePicker();
 }
 
-// --- 6️⃣ Pop-up heure ---
+// --- 7️⃣ Pop-up heure ---
 function showTimePicker() { document.getElementById("timePickerPopup").classList.add('show'); }
 function hideTimePicker() { document.getElementById("timePickerPopup").classList.remove('show'); }
 
@@ -107,13 +117,13 @@ function confirmTime() {
   if (mode === "manuel") startCountdown();
 }
 
-// --- 7️⃣ Switch entre manuel et API ---
+// --- 8️⃣ Switch manuel <-> API ---
 function switchMode() {
   clearInterval(countdownInterval);
   mode = mode === "manuel" ? "api" : "manuel";
 
-  // Mettre à jour l’affichage cible
-  const currentTarget = getActiveTargetDate();
+  // Mettre à jour l’affichage
+  const target = getActiveTargetDate();
   if (mode === "manuel") {
     document.getElementById("eventName").textContent = "Événement";
     document.getElementById("eventImage").src = "";
@@ -121,10 +131,10 @@ function switchMode() {
     document.getElementById("targetTime").textContent = "CIBLE : " + targetDateAPI.toLocaleString();
   }
 
-  if (currentTarget) startCountdown();
+  if (target) startCountdown();
 }
 
-// --- 8️⃣ Fonction utilitaire pour récupérer la date active ---
+// --- 9️⃣ Fonction utilitaire pour récupérer la date active ---
 function getActiveTargetDate() {
   return mode === "manuel" ? targetDateManual : targetDateAPI;
 }
