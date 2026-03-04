@@ -83,7 +83,8 @@ function switchMode() {
 // --- API live ---
 async function loadEventFromAPI() {
   try {
-    const url = 'https://api.spacexdata.com/v5/launches/next';
+    const url = 'https://opensky-network.org/api'
+;
     const res = await fetch(url);
     const data = await res.json();
     const evenement = {
