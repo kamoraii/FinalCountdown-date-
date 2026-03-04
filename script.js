@@ -1,9 +1,12 @@
-let countdownInterval;
+let countdownIntervalManual = null;
+let countdownIntervalAPI = null;
 let mode = "manuel"; // "manuel" ou "api"
+
+// --- 1️⃣ Variables de dates ---
 let targetDateManual = null;
 let targetDateAPI = null;
 
-// --- 1️⃣ Au chargement de la page : lire localStorage pour les deux modes ---
+// --- 2️⃣ Au chargement, récupérer les dates depuis localStorage ---
 window.addEventListener('load', () => {
   const savedManual = localStorage.getItem('targetDateManual');
   if (savedManual) {
@@ -17,45 +20,19 @@ window.addEventListener('load', () => {
     if (!isNaN(parsed)) targetDateAPI = parsed;
   }
 
-  // Démarrer le compte actif si présent
-  if (mode === "manuel" && targetDateManual) startCountdown();
-  else if (mode === "api" && targetDateAPI) startCountdown();
+  // Démarrage automatique du mode manuel si date existante
+  if (targetDateManual) startCountdownManual();
 });
 
-// --- 2️⃣ Charger l'événement depuis JSON API ---
-async function loadEventFromAPI() {
-  try {
-    const response = await fetch('evenements.json');
-    const data = await response.json();
-    const actifs = data.filter(ev => ev.active);
-    if (actifs.length === 0) return;
-    const evenement = actifs[0];
-
-    document.getElementById("eventName").textContent = evenement.name;
-    document.getElementById("eventImage").src = evenement.image;
-
-    targetDateAPI = new Date(evenement.date);
-    localStorage.setItem('targetDateAPI', targetDateAPI.toString());
-
-    // --- 3️⃣ Bascule automatique sur mode API ---
-    mode = "api";
-    startCountdown();
-  } catch (e) {
-    console.error("Erreur API:", e);
-  }
-}
-
-// --- 4️⃣ Mise à jour affichage compte à rebours ---
-function updateDisplay() {
+// --- 3️⃣ Fonction utilitaire pour mettre à jour affichage ---
+function updateDisplay(targetDate) {
   const display = document.getElementById("timeRemaining");
-  const target = getActiveTargetDate();
-  if (!target) { display.textContent = "00:00:00"; return; }
+  if (!targetDate) { display.textContent = "00:00:00"; return; }
 
   const now = new Date();
-  let diff = target - now;
+  let diff = targetDate - now;
   if (diff <= 0) {
     display.textContent = "00:00:00";
-    clearInterval(countdownInterval);
     return;
   }
 
@@ -65,7 +42,7 @@ function updateDisplay() {
   const secondes = Math.floor((diff / 1000) % 60);
   display.textContent = `${jours}j ${heures}h ${minutes}m ${secondes}s`;
 
-  // Mettre à jour le texte cible pour API ou manuel
+  // Mettre à jour cible en haut
   if (mode === "manuel") {
     document.getElementById("targetTime").textContent =
       "CIBLE : " + targetDateManual.toLocaleString();
@@ -75,20 +52,32 @@ function updateDisplay() {
   }
 }
 
-// --- 5️⃣ Démarrer le compte à rebours ---
-function startCountdown() {
-  clearInterval(countdownInterval);
-  updateDisplay();
-  countdownInterval = setInterval(updateDisplay, 1000);
+// --- 4️⃣ Compte à rebours manuel ---
+function startCountdownManual() {
+  clearInterval(countdownIntervalManual);
+  mode = "manuel";
+  countdownIntervalManual = setInterval(() => {
+    updateDisplay(targetDateManual);
+  }, 1000);
+}
+
+// --- 5️⃣ Compte à rebours API ---
+function startCountdownAPI() {
+  clearInterval(countdownIntervalAPI);
+  mode = "api";
+  countdownIntervalAPI = setInterval(() => {
+    updateDisplay(targetDateAPI);
+  }, 1000);
 }
 
 // --- 6️⃣ Reset ---
 function resetCountdown() {
-  clearInterval(countdownInterval);
   if (mode === "manuel") {
+    clearInterval(countdownIntervalManual);
     targetDateManual = null;
     localStorage.removeItem('targetDateManual');
   } else {
+    clearInterval(countdownIntervalAPI);
     targetDateAPI = null;
     localStorage.removeItem('targetDateAPI');
     document.getElementById("eventName").textContent = "Événement";
@@ -110,31 +99,44 @@ function confirmTime() {
   const now = new Date();
   targetDateManual = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
   if (targetDateManual < now) targetDateManual.setDate(targetDateManual.getDate() + 1);
-  document.getElementById("targetTime").textContent = "CIBLE : " + timeValue;
   localStorage.setItem('targetDateManual', targetDateManual.toString());
-
   hideTimePicker();
-  if (mode === "manuel") startCountdown();
+  if (mode === "manuel") startCountdownManual();
 }
 
-// --- 8️⃣ Switch manuel <-> API ---
-function switchMode() {
-  clearInterval(countdownInterval);
-  mode = mode === "manuel" ? "api" : "manuel";
+// --- 8️⃣ Charger API ---
+async function loadEventFromAPI() {
+  try {
+    const response = await fetch('evenements.json');
+    const data = await response.json();
+    const actifs = data.filter(ev => ev.active);
+    if (actifs.length === 0) return;
+    const evenement = actifs[0];
 
-  // Mettre à jour l’affichage
-  const target = getActiveTargetDate();
-  if (mode === "manuel") {
-    document.getElementById("eventName").textContent = "Événement";
-    document.getElementById("eventImage").src = "";
-  } else if (mode === "api" && targetDateAPI) {
-    document.getElementById("targetTime").textContent = "CIBLE : " + targetDateAPI.toLocaleString();
+    document.getElementById("eventName").textContent = evenement.name;
+    document.getElementById("eventImage").src = evenement.image;
+
+    targetDateAPI = new Date(evenement.date);
+    localStorage.setItem('targetDateAPI', targetDateAPI.toString());
+
+    startCountdownAPI(); // bascule automatique sur API
+  } catch (e) {
+    console.error("Erreur API:", e);
   }
-
-  if (target) startCountdown();
 }
 
-// --- 9️⃣ Fonction utilitaire pour récupérer la date active ---
+// --- 9️⃣ Switch manuel ↔ API ---
+function switchMode() {
+  if (mode === "manuel") {
+    clearInterval(countdownIntervalManual);
+    if (targetDateAPI) startCountdownAPI();
+  } else {
+    clearInterval(countdownIntervalAPI);
+    if (targetDateManual) startCountdownManual();
+  }
+}
+
+// --- 10️⃣ Récupérer date active pour affichage (optionnel) ---
 function getActiveTargetDate() {
   return mode === "manuel" ? targetDateManual : targetDateAPI;
 }
