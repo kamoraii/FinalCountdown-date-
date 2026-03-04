@@ -1,0 +1,20 @@
+[
+  {
+    "name": "SpaceX Falcon 9",
+    "date": "2026-03-15T14:00:00Z",
+    "active": true,
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Emoji_u1f680.jpeg/1200px-Emoji_u1f680.jpeg"
+  },
+  {
+    "name": "Lancement satellite Starlink",
+    "date": "2026-04-01T10:00:00Z",
+    "active": true,
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fb/Starlink-logo.jpeg/800px-Starlink-logo.jpeg"
+  },
+  {
+    "name": "Fête de la science",
+    "date": "2026-05-20T09:00:00Z",
+    "active": false,
+    "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Science-Festival.jpeg/800px-Science-Festival.jpeg"
+  }
+]
