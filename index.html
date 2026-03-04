@@ -92,8 +92,9 @@ function updateTargetDisplay(date){
 function startCountdown(){
   if(interval) clearInterval(interval);
   interval=setInterval(()=>{
-    let now=new Date();
-    let diff=(usingAPI?apiDate:manualDate)-now;
+    let target = usingAPI ? apiDate : manualDate;
+    if(!target) { countdown.textContent="--:--:--"; return; }
+    let diff=target - new Date();
     if(diff<0) diff=0;
     let h=Math.floor(diff/3600000);
     let m=Math.floor((diff%3600000)/60000);
