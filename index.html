@@ -4,15 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Icône pour navigateur et mobile -->
+<!-- Icône -->
 <link rel="icon" type="image/jpeg" href="icone_site.jpeg">
 <link rel="apple-touch-icon" sizes="180x180" href="icone_site.jpeg">
 
-<title>Combien de temps y me reste ?</title>
+<title>Compte à rebours interactif</title>
+
 <style>
 body { margin:0; font-family:Arial,sans-serif; background:#111; display:flex; align-items:center; justify-content:center; height:100vh; position:relative; overflow-x:hidden;}
 body::before { content:""; position:absolute; width:200%; height:200%; background-image:linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px); background-size:50px 50px; animation:moveLines 10s linear infinite; z-index:0;}
 @keyframes moveLines {0%{transform:translate(0,0);}100%{transform:translate(-50px,-50px);}}
+
 .countdown-container {position:relative; z-index:1; display:flex; flex-direction:column; align-items:center; background-color:rgba(17,17,17,0.9); padding:25px; border-radius:16px; width:90%; max-width:350px; text-align:center; box-shadow:0 0 20px rgba(255,255,255,0.05);}
 .time-remaining {font-size:3rem; color:#fff; margin-bottom:10px;}
 .target-time {font-size:1.2rem; color:#9CA3AF; margin-bottom:20px;}
@@ -29,6 +31,7 @@ body::before { content:""; position:absolute; width:200%; height:200%; backgroun
 .time-picker-popup button{padding:10px 16px; border-radius:8px; font-weight:bold; border:none; cursor:pointer; color:#fff; background-color:#3B82F6; transition:opacity 0.2s ease, transform 0.1s ease;}
 .time-picker-popup button:hover{opacity:0.85; transform:scale(0.98);}
 </style>
+
 </head>
 <body>
 
@@ -37,10 +40,11 @@ body::before { content:""; position:absolute; width:200%; height:200%; backgroun
   <div class="target-time" id="targetTime">CIBLE : --:--</div>
 
   <div class="buttons">
-    <button class="btn-primary" onclick="showTimePicker()">CHOISIR L’HEURE</button>
+    <button class="btn-primary" onclick="showTimePicker()">CHOISIR HEURE</button>
     <button class="btn-secondary" onclick="startCountdown()">START</button>
     <button class="btn-tertiary" onclick="resetCountdown()">RESET</button>
-    <button class="btn-primary" onclick="loadAPI()">CHARGER API</button>
+    <button class="btn-primary" onclick="switchMode()">SWITCH MANUEL/API</button>
+    <button class="btn-secondary" onclick="loadAPI()">CHARGER API</button>
   </div>
 </div>
 
@@ -55,75 +59,106 @@ let targetDate = null;
 let apiData = null;
 let usingAPI = false;
 
-window.addEventListener('load', ()=>{
-  const saved = localStorage.getItem('targetDate');
-  if(saved){ 
-    const parsed = new Date(saved); 
-    if(!isNaN(parsed)){ 
-      targetDate=parsed; 
-      document.getElementById("targetTime").textContent="CIBLE : "+targetDate.toTimeString().slice(0,5); 
-      startCountdown();
-    }
+// LocalStorage keys différents pour manuel et API
+const LS_MANUAL = "manualDate";
+const LS_API = "apiDate";
+
+window.addEventListener('load', () => {
+  // charger la dernière cible selon mode
+  const savedManual = localStorage.getItem(LS_MANUAL);
+  if(savedManual){ 
+    const d = new Date(savedManual); 
+    if(!isNaN(d)){ targetDate=d; usingAPI=false; updateTargetDisplay(); startCountdown();}
+  }
+  const savedAPI = localStorage.getItem(LS_API);
+  if(savedAPI && !usingAPI){ 
+    // on ne charge l'API que si l'utilisateur switch plus tard
+    apiData = {date_utc: savedAPI}; 
   }
 });
 
+function updateTargetDisplay(){
+  if(!targetDate){ document.getElementById("targetTime").textContent="CIBLE : --:--"; return; }
+  document.getElementById("targetTime").textContent="CIBLE : "+targetDate.toLocaleString();
+}
+
 function updateDisplay(){
   const display = document.getElementById("timeRemaining");
-  if(!targetDate){display.textContent="00:00:00"; return;}
-  const now=new Date();
-  let diff=targetDate-now;
-  if(diff<=0){display.textContent="00:00:00"; clearInterval(countdownInterval); localStorage.removeItem('targetDate'); return;}
+  if(!targetDate){ display.textContent="00:00:00"; return; }
+  const now = new Date();
+  let diff = targetDate - now;
+  if(diff<=0){ display.textContent="00:00:00"; clearInterval(countdownInterval); return; }
   const hours=Math.floor(diff/1000/3600);
   const minutes=Math.floor((diff/1000%3600)/60);
   const seconds=Math.floor(diff/1000%60);
   display.textContent=`${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
 }
 
+// Time picker
 function showTimePicker(){document.getElementById("timePickerPopup").classList.add('show'); document.getElementById("timeInput").focus();}
 function hideTimePicker(){document.getElementById("timePickerPopup").classList.remove('show');}
 
 function confirmTime(){
-  const timeValue=document.getElementById("timeInput").value;
-  if(!timeValue) return;
-  const [h,m]=timeValue.split(":").map(Number);
-  const now=new Date();
-  targetDate=new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
+  const val = document.getElementById("timeInput").value;
+  if(!val) return;
+  const [h,m] = val.split(":").map(Number);
+  const now = new Date();
+  targetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m,0);
   if(targetDate<now) targetDate.setDate(targetDate.getDate()+1);
-  document.getElementById("targetTime").textContent="CIBLE : "+timeValue;
-  hideTimePicker();
   usingAPI=false;
-  localStorage.setItem('targetDate', targetDate.toString());
-  updateDisplay();
+  localStorage.setItem(LS_MANUAL,targetDate.toString());
+  updateTargetDisplay();
+  hideTimePicker();
+  startCountdown();
 }
 
-function startCountdown(){ 
-  if(!targetDate){ alert("Choisissez d'abord une heure cible !"); return; }
+// Countdown
+function startCountdown(){
+  if(!targetDate){ alert("Choisissez d'abord une cible !"); return; }
   clearInterval(countdownInterval);
   updateDisplay();
-  countdownInterval=setInterval(updateDisplay,1000);
+  countdownInterval = setInterval(updateDisplay,1000);
 }
 
 function resetCountdown(){
   clearInterval(countdownInterval);
   targetDate=null;
+  updateTargetDisplay();
   document.getElementById("timeRemaining").textContent="00:00:00";
-  document.getElementById("targetTime").textContent="CIBLE : --:--";
-  hideTimePicker();
-  localStorage.removeItem('targetDate');
   usingAPI=false;
 }
 
+// SWITCH
+function switchMode(){
+  clearInterval(countdownInterval);
+  if(usingAPI){
+    // passer au manuel
+    const savedManual = localStorage.getItem(LS_MANUAL);
+    targetDate = savedManual ? new Date(savedManual) : null;
+    usingAPI=false;
+  }else{
+    // passer à l'API
+    targetDate = apiData ? new Date(apiData.date_utc) : null;
+    usingAPI=true;
+  }
+  updateTargetDisplay();
+  startCountdown();
+}
+
+// LOAD API
 async function loadAPI(){
   try{
-    const res = await fetch('events.json'); 
+    let url = prompt("Entrez l'URL du JSON de l'API:", "events.json");
+    if(!url) return;
+    const res = await fetch(url);
     const data = await res.json();
-    apiData=data;
-    targetDate=new Date(data.date_utc);
-    document.getElementById("targetTime").textContent="CIBLE : "+targetDate.toLocaleString();
-    document.getElementById("timeRemaining").textContent="00:00:00";
+    apiData = data;
+    targetDate = new Date(data.date_utc);
     usingAPI=true;
+    localStorage.setItem(LS_API,targetDate.toString());
+    updateTargetDisplay();
     startCountdown();
-  }catch(e){alert("Erreur chargement API");}
+  }catch(e){ alert("Erreur chargement API ou URL invalide"); console.error(e); }
 }
 </script>
 
