@@ -92,9 +92,10 @@ function updateTargetDisplay(date){
 function startCountdown(){
   if(interval) clearInterval(interval);
   interval=setInterval(()=>{
-    let target = usingAPI ? apiDate : manualDate;
-    if(!target) { countdown.textContent="--:--:--"; return; }
-    let diff=target - new Date();
+    let now=new Date();
+    let target=usingAPI?apiDate:manualDate;
+    if(!target){ countdown.textContent="--:--:--"; return; }
+    let diff=target-now;
     if(diff<0) diff=0;
     let h=Math.floor(diff/3600000);
     let m=Math.floor((diff%3600000)/60000);
@@ -124,9 +125,9 @@ function resetManual(){
   if(!usingAPI) updateTargetDisplay(new Date());
 }
 
-async function loadAPI(){
+async function loadAPI(urlPrompt){
   try{
-    let url=prompt("Entrez l'URL du JSON de l'API:","evenements.json");
+    let url=urlPrompt||prompt("Entrez l'URL du JSON de l'API:","evenements.json");
     if(!url) return;
     let res;
     try{ res=await fetch(url); }
@@ -167,15 +168,27 @@ function switchMode(){
 document.getElementById("chooseTime").addEventListener("click",chooseManualTime);
 document.getElementById("startBtn").addEventListener("click",startCountdown);
 document.getElementById("resetBtn").addEventListener("click",resetManual);
-document.getElementById("loadAPI").addEventListener("click",loadAPI);
+document.getElementById("loadAPI").addEventListener("click",()=>loadAPI());
 document.getElementById("switchBtn").addEventListener("click",switchMode);
 
 // restore from localStorage
 if(localStorage.getItem(LS_MANUAL)) manualDate=new Date(localStorage.getItem(LS_MANUAL));
 if(localStorage.getItem(LS_API)) apiDate=new Date(localStorage.getItem(LS_API));
 if(localStorage.getItem(LS_APIURL)) apiUrl=localStorage.getItem(LS_APIURL);
-if(usingAPI && apiDate) updateTargetDisplay(apiDate);
-else if(manualDate) updateTargetDisplay(manualDate);
+
+// fallback automatique au chargement
+if(apiDate){
+  usingAPI=true;
+  updateTargetDisplay(apiDate);
+}else if(manualDate){
+  usingAPI=false;
+  updateTargetDisplay(manualDate);
+}else{
+  // essayer de charger evenements.json automatiquement
+  loadAPI("evenements.json");
+}
+
+startCountdown();
 
 // simple canvas background
 const canvas=document.getElementById("bgCanvas");
