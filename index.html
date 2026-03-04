@@ -1,18 +1,172 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Événements Dynamiques</title>
-  <link rel="icon" type="image/jpeg" href="icone_site.jpeg"> <!-- icône de bureau / onglet -->
-  <style>
-    body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
-    h2 { color: #FF5722; }
-    p { font-size: 1.2em; }
-    img { margin-top: 20px; width: 120px; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Icône pour navigateur et raccourci -->
+<link rel="icon" type="image/jpeg" href="icone_site.jpeg">
+<link rel="apple-touch-icon" sizes="180x180" href="icone_site.jpeg">
+
+<title>Combien de temps il me reste ?</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background-color: #111111;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow-x: hidden;
+}
+body::before {
+  content: "";
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  background-image: linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
+                    linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 50px 50px;
+  animation: moveLines 10s linear infinite;
+  z-index: 0;
+}
+@keyframes moveLines { 0% { transform: translate(0,0); } 100% { transform: translate(-50px,-50px); } }
+
+.countdown-container {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: rgba(17,17,17,0.9);
+  padding: 25px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 350px;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(255,255,255,0.05);
+}
+
+.time-remaining {
+  font-size: 3rem;
+  color: #FFFFFF;
+  margin-bottom: 10px;
+}
+.target-time {
+  font-size: 1.2rem;
+  color: #9CA3AF;
+  margin-bottom: 10px;
+}
+.event-name {
+  font-size: 1.4rem;
+  color: #FFD700;
+  margin-bottom: 10px;
+}
+.event-image {
+  width: 120px;
+  margin-bottom: 20px;
+}
+
+/* Pop-up flottant animé */
+.time-picker-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  background: #1F1F1F;
+  padding: 20px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  z-index: 999;
+  box-shadow: 0 0 20px rgba(255,255,255,0.2);
+  opacity: 0;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+.time-picker-popup.show {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+}
+.time-picker-popup input {
+  font-size: 1rem;
+  padding: 8px;
+  border-radius: 8px;
+  border: none;
+  text-align: center;
+  width: 150px;
+}
+.time-picker-popup button {
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+  background-color: #3B82F6;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+}
+.time-picker-popup button:hover { opacity: 0.85; transform: scale(0.98); }
+
+/* Boutons principaux */
+.buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+.buttons button {
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+}
+.buttons button:hover,
+.buttons button:active { opacity: 0.85; transform: scale(0.98); }
+.btn-primary { background-color: #3B82F6; color: #FFFFFF; }
+.btn-secondary { background-color: #22C55E; color: #FFFFFF; }
+.btn-tertiary { background-color: #374151; color: #FFFFFF; }
+
+/* Responsive */
+@media (max-width: 400px) {
+  .time-remaining { font-size: 2.4rem; }
+  .target-time { font-size: 1rem; }
+  .event-name { font-size: 1.1rem; }
+  .buttons button { padding: 12px; font-size: 0.95rem; }
+  .time-picker-popup input { width: 100%; }
+}
+</style>
 </head>
 <body>
-  <div id="compteur">Chargement...</div>
-  <script src="script.js"></script>
+<div class="countdown-container">
+  <div class="event-name" id="eventName">Événement</div>
+  <div class="event-image-container">
+    <img id="eventImage" class="event-image" src="" alt="Événement">
+  </div>
+  <div class="time-remaining" id="timeRemaining">00:00:00</div>
+  <div class="target-time" id="targetTime">CIBLE : --:--</div>
+
+  <div class="buttons">
+    <button class="btn-primary" onclick="showTimePicker()">CHOISIR L’HEURE</button>
+    <button class="btn-secondary" onclick="startCountdown()">START</button>
+    <button class="btn-tertiary" onclick="resetCountdown()">RESET</button>
+    <button class="btn-primary" onclick="loadEventFromAPI()">CHARGER API</button>
+  </div>
+</div>
+
+<!-- Pop-up flottant pour saisir l'heure -->
+<div class="time-picker-popup" id="timePickerPopup">
+  <input type="time" id="timeInput">
+  <button onclick="confirmTime()">Valider</button>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
