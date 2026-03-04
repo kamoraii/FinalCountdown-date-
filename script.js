@@ -1,114 +1,96 @@
-let countdownIntervalManual = null;
-let countdownIntervalAPI = null;
-let mode = "manuel"; // "manuel" ou "api"
-let currentAPISource = 0; // index de la source JSON
-
-// --- 1️⃣ Variables ---
+let countdownInterval;
+let mode = 'manual';
 let targetDateManual = null;
 let targetDateAPI = null;
 
-const apiSources = [
-  'evenements1.json',
-  'evenements2.json'
-];
+const modeIndicator = document.getElementById("modeIndicator");
 
-// --- 2️⃣ Récupérer les dates depuis localStorage ---
+// Charger depuis localStorage
 window.addEventListener('load', () => {
   const savedManual = localStorage.getItem('targetDateManual');
   if (savedManual) targetDateManual = new Date(savedManual);
-
   const savedAPI = localStorage.getItem('targetDateAPI');
   if (savedAPI) targetDateAPI = new Date(savedAPI);
-
-  if (targetDateManual) startCountdownManual();
+  updateDisplay();
 });
 
-// --- 3️⃣ Affichage ---
-function updateDisplay(targetDate) {
+function updateDisplay() {
   const display = document.getElementById("timeRemaining");
-  if (!targetDate) { display.textContent = "00:00:00"; return; }
+  let now = new Date();
+  let diff;
+  if (mode === 'manual' && targetDateManual) diff = targetDateManual - now;
+  else if (mode === 'api' && targetDateAPI) diff = targetDateAPI - now;
+  else { display.textContent = "00:00:00"; return; }
 
-  const now = new Date();
-  let diff = targetDate - now;
-  if (diff <= 0) { display.textContent = "00:00:00"; return; }
+  if (diff <= 0) { display.textContent = "00:00:00"; clearInterval(countdownInterval); return; }
 
-  const jours = Math.floor(diff / 1000 / 3600 / 24);
-  const heures = Math.floor((diff / 1000 / 3600) % 24);
-  const minutes = Math.floor((diff / 1000 / 60) % 60);
-  const secondes = Math.floor((diff / 1000) % 60);
+  const hours = Math.floor(diff / 1000 / 3600);
+  const minutes = Math.floor((diff / 1000 % 3600) / 60);
+  const seconds = Math.floor(diff / 1000 % 60);
+  display.textContent = `${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
 
-  display.textContent = `${jours}j ${heures}h ${minutes}m ${secondes}s`;
+  modeIndicator.textContent = mode === 'manual' ? "Mode : Manuel" : "Mode : API";
+  modeIndicator.style.color = mode==='manual' ? '#22C55E' : '#FFD700';
 
-  if (mode === "manuel") {
-    document.getElementById("targetTime").textContent =
-      "CIBLE : " + targetDateManual.toLocaleString();
-  } else {
-    document.getElementById("targetTime").textContent =
-      "CIBLE : " + targetDateAPI.toLocaleString();
-  }
+  if(mode==='manual' && targetDateManual) document.getElementById("targetTime").textContent = "CIBLE : " + targetDateManual.toTimeString().slice(0,5);
+  else if(mode==='api' && targetDateAPI) document.getElementById("targetTime").textContent = "CIBLE : " + targetDateAPI.toLocaleString();
 }
 
-// --- 4️⃣ Compte manuel ---
-function startCountdownManual() {
-  clearInterval(countdownIntervalManual);
-  mode = "manuel";
-  countdownIntervalManual = setInterval(() => {
-    updateDisplay(targetDateManual);
-  }, 1000);
-}
-
-// --- 5️⃣ Compte API ---
-function startCountdownAPI() {
-  clearInterval(countdownIntervalAPI);
-  mode = "api";
-  countdownIntervalAPI = setInterval(() => {
-    updateDisplay(targetDateAPI);
-  }, 1000);
-}
-
-// --- 6️⃣ Reset ---
-function resetCountdown() {
-  if (mode === "manuel") {
-    clearInterval(countdownIntervalManual);
-    targetDateManual = null;
-    localStorage.removeItem('targetDateManual');
-  } else {
-    clearInterval(countdownIntervalAPI);
-    targetDateAPI = null;
-    localStorage.removeItem('targetDateAPI');
-    document.getElementById("eventName").textContent = "Événement";
-    document.getElementById("eventImage").src = "";
-  }
-  document.getElementById("timeRemaining").textContent = "00:00:00";
-  document.getElementById("targetTime").textContent = "CIBLE : --:--";
-  hideTimePicker();
-}
-
-// --- 7️⃣ Pop-up heure ---
+// --- Pop-up manuel ---
 function showTimePicker() { document.getElementById("timePickerPopup").classList.add('show'); }
 function hideTimePicker() { document.getElementById("timePickerPopup").classList.remove('show'); }
-
 function confirmTime() {
   const timeValue = document.getElementById("timeInput").value;
   if (!timeValue) return;
-  const [h, m] = timeValue.split(":").map(Number);
+  const [h,m] = timeValue.split(":").map(Number);
   const now = new Date();
   targetDateManual = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
-  if (targetDateManual < now) targetDateManual.setDate(targetDateManual.getDate() + 1);
+  if (targetDateManual < now) targetDateManual.setDate(targetDateManual.getDate()+1);
   localStorage.setItem('targetDateManual', targetDateManual.toString());
-  hideTimePicker();
-  if (mode === "manuel") startCountdownManual();
+  mode='manual'; updateDisplay(); hideTimePicker();
 }
 
-// --- 8️⃣ Charger API ---
-async function loadEventFromAPI(index = 0) {
+// --- Countdown manuel ---
+function startCountdownManual() {
+  if (!targetDateManual) { alert("Choisissez d'abord une heure !"); return; }
+  mode='manual';
+  clearInterval(countdownInterval);
+  updateDisplay();
+  countdownInterval = setInterval(updateDisplay,1000);
+}
+
+// --- Reset ---
+function resetCountdown() {
+  clearInterval(countdownInterval);
+  targetDateManual=null;
+  targetDateAPI=null;
+  localStorage.removeItem('targetDateManual');
+  localStorage.removeItem('targetDateAPI');
+  document.getElementById("timeRemaining").textContent="00:00:00";
+  document.getElementById("targetTime").textContent="CIBLE : --:--";
+  document.getElementById("eventName").textContent="Événement";
+  document.getElementById("eventImage").src="";
+}
+
+// --- Switch Mode ---
+function switchMode() {
+  mode = (mode==='manual') ? 'api' : 'manual';
+  clearInterval(countdownInterval);
+  updateDisplay();
+  countdownInterval = setInterval(updateDisplay,1000);
+}
+
+// --- API live ---
+async function loadEventFromAPI() {
   try {
-    currentAPISource = index;
-    const response = await fetch(apiSources[index]);
-    const data = await response.json();
-    const actifs = data.filter(ev => ev.active);
-    if (actifs.length === 0) return;
-    const evenement = actifs[0];
+    const url = 'https://api.spacexdata.com/v5/launches/next';
+    const res = await fetch(url);
+    const data = await res.json();
+    const evenement = {
+      name: data.name,
+      date: data.date_utc,
+      image: data.links.patch.small
+    };
 
     document.getElementById("eventName").textContent = evenement.name;
     document.getElementById("eventImage").src = evenement.image;
@@ -116,25 +98,11 @@ async function loadEventFromAPI(index = 0) {
     targetDateAPI = new Date(evenement.date);
     localStorage.setItem('targetDateAPI', targetDateAPI.toString());
 
-    startCountdownAPI(); // bascule automatique
-  } catch (e) {
-    console.error("Erreur API:", e);
+    mode='api';
+    clearInterval(countdownInterval);
+    updateDisplay();
+    countdownInterval = setInterval(updateDisplay,1000);
+  } catch(e) {
+    console.error("Erreur API:",e);
   }
-}
-
-// --- 9️⃣ Switch manuel ↔ API ---
-function switchMode() {
-  if (mode === "manuel") {
-    clearInterval(countdownIntervalManual);
-    if (targetDateAPI) startCountdownAPI();
-  } else {
-    clearInterval(countdownIntervalAPI);
-    if (targetDateManual) startCountdownManual();
-  }
-}
-
-// --- 10️⃣ Changer de source API depuis le site ---
-function switchAPISource(index) {
-  if (index < 0 || index >= apiSources.length) return;
-  loadEventFromAPI(index);
 }
