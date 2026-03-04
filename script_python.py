@@ -1,7 +1,8 @@
 import requests
 import json
 
-url = "https://api.spacexdata.com/v4/launches/next"
+url = "https://opensky-network.org/api"
+
 response = requests.get(url)
 data = response.json()
 
