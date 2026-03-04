@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Icône pour navigateur et raccourci -->
+<!-- Icône du site -->
 <link rel="icon" type="image/jpeg" href="icone_site.jpeg">
 <link rel="apple-touch-icon" sizes="180x180" href="icone_site.jpeg">
 
@@ -22,19 +22,6 @@ body {
   position: relative;
   overflow-x: hidden;
 }
-body::before {
-  content: "";
-  position: absolute;
-  width: 200%;
-  height: 200%;
-  background-image: linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
-                    linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
-  background-size: 50px 50px;
-  animation: moveLines 10s linear infinite;
-  z-index: 0;
-}
-@keyframes moveLines { 0% { transform: translate(0,0); } 100% { transform: translate(-50px,-50px); } }
-
 .countdown-container {
   position: relative;
   z-index: 1;
@@ -49,7 +36,6 @@ body::before {
   text-align: center;
   box-shadow: 0 0 20px rgba(255,255,255,0.05);
 }
-
 .time-remaining {
   font-size: 3rem;
   color: #FFFFFF;
@@ -58,19 +44,12 @@ body::before {
 .target-time {
   font-size: 1.2rem;
   color: #9CA3AF;
-  margin-bottom: 10px;
-}
-.event-name {
-  font-size: 1.4rem;
-  color: #FFD700;
-  margin-bottom: 10px;
-}
-.event-image {
-  width: 120px;
   margin-bottom: 20px;
 }
+#eventName { color: #FFD700; margin-bottom: 10px; }
+#eventImage { width: 100px; margin-bottom: 15px; border-radius: 12px; }
 
-/* Pop-up flottant animé */
+/* Pop-up pour choisir l’heure */
 .time-picker-popup {
   position: fixed;
   top: 50%;
@@ -88,10 +67,7 @@ body::before {
   opacity: 0;
   transition: transform 0.25s ease, opacity 0.25s ease;
 }
-.time-picker-popup.show {
-  transform: translate(-50%, -50%) scale(1);
-  opacity: 1;
-}
+.time-picker-popup.show { transform: translate(-50%, -50%) scale(1); opacity: 1; }
 .time-picker-popup input {
   font-size: 1rem;
   padding: 8px;
@@ -108,9 +84,7 @@ body::before {
   cursor: pointer;
   color: #fff;
   background-color: #3B82F6;
-  transition: opacity 0.2s ease, transform 0.1s ease;
 }
-.time-picker-popup button:hover { opacity: 0.85; transform: scale(0.98); }
 
 /* Boutons principaux */
 .buttons {
@@ -128,35 +102,36 @@ body::before {
   cursor: pointer;
   transition: opacity 0.2s ease, transform 0.1s ease;
 }
-.buttons button:hover,
-.buttons button:active { opacity: 0.85; transform: scale(0.98); }
+.buttons button:hover, .buttons button:active { opacity: 0.85; transform: scale(0.98); }
 .btn-primary { background-color: #3B82F6; color: #FFFFFF; }
 .btn-secondary { background-color: #22C55E; color: #FFFFFF; }
 .btn-tertiary { background-color: #374151; color: #FFFFFF; }
+.btn-switch { background-color: #F59E0B; color: #FFFFFF; }
 
 /* Responsive */
 @media (max-width: 400px) {
   .time-remaining { font-size: 2.4rem; }
   .target-time { font-size: 1rem; }
-  .event-name { font-size: 1.1rem; }
   .buttons button { padding: 12px; font-size: 0.95rem; }
   .time-picker-popup input { width: 100%; }
 }
 </style>
 </head>
+
 <body>
+
 <div class="countdown-container">
-  <div class="event-name" id="eventName">Événement</div>
-  <div class="event-image-container">
-    <img id="eventImage" class="event-image" src="" alt="Événement">
-  </div>
   <div class="time-remaining" id="timeRemaining">00:00:00</div>
   <div class="target-time" id="targetTime">CIBLE : --:--</div>
+
+  <div id="eventName">Événement</div>
+  <img id="eventImage" src="" alt="Image événement">
 
   <div class="buttons">
     <button class="btn-primary" onclick="showTimePicker()">CHOISIR L’HEURE</button>
     <button class="btn-secondary" onclick="startCountdown()">START</button>
     <button class="btn-tertiary" onclick="resetCountdown()">RESET</button>
+    <button class="btn-switch" onclick="switchMode()">SWITCH MODE</button>
     <button class="btn-primary" onclick="loadEventFromAPI()">CHARGER API</button>
   </div>
 </div>
@@ -167,6 +142,7 @@ body::before {
   <button onclick="confirmTime()">Valider</button>
 </div>
 
+<!-- Inclure le script.js -->
 <script src="script.js"></script>
 </body>
 </html>
