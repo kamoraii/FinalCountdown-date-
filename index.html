@@ -4,338 +4,427 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Favicon pour navigateur et écran d’accueil -->
 <link rel="icon" type="image/png" href="icone_site.jpeg">
 <link rel="apple-touch-icon" sizes="180x180" href="icone_site.jpeg">
 
-<title>Combien de temps y me reste ?</title>
+<title>Combien de temps y me reste ?</title>
+
 <style>
+
 body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background-color: #111111;
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  overflow-x: hidden;
-}
-body::before {
-  content: "";
-  position: absolute;
-  width: 200%;
-  height: 200%;
-  background-image: linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
-                    linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
-  background-size: 50px 50px;
-  animation: moveLines 10s linear infinite;
-  z-index: 0;
-}
-@keyframes moveLines { 0% { transform: translate(0,0); } 100% { transform: translate(-50px,-50px); } }
-
-.countdown-container {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background-color: rgba(17,17,17,0.9);
-  padding: 25px;
-  border-radius: 16px;
-  width: 90%;
-  max-width: 350px;
-  text-align: center;
-  box-shadow: 0 0 20px rgba(255,255,255,0.05);
+margin:0;
+font-family:Arial, sans-serif;
+background-color:#111111;
+height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+position:relative;
+overflow-x:hidden;
 }
 
-.time-remaining {
-  font-size: 3rem;
-  color: #FFFFFF;
-  margin-bottom: 10px;
-}
-.target-time {
-  font-size: 1.2rem;
-  color: #9CA3AF;
-  margin-bottom: 10px;
-}
-
-/* Pop-up flottant animé */
-.time-picker-popup {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(0);
-  background: #1F1F1F;
-  padding: 20px;
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  z-index: 999;
-  box-shadow: 0 0 20px rgba(255,255,255,0.2);
-  opacity: 0;
-  transition: transform 0.25s ease, opacity 0.25s ease;
-}
-.time-picker-popup.show {
-  transform: translate(-50%, -50%) scale(1);
-  opacity: 1;
-}
-.time-picker-popup input {
-  font-size: 1rem;
-  padding: 8px;
-  border-radius: 8px;
-  border: none;
-  text-align: center;
-  width: 150px;
-}
-.time-picker-popup button {
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-weight: bold;
-  border: none;
-  cursor: pointer;
-  color: #fff;
-  background-color: #3B82F6;
-  transition: opacity 0.2s ease, transform 0.1s ease;
-}
-.time-picker-popup button:hover { opacity: 0.85; transform: scale(0.98); }
-
-/* Boutons principaux */
-.buttons {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-}
-.buttons button {
-  padding: 14px;
-  border: none;
-  border-radius: 10px;
-  font-size: 1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: opacity 0.2s ease, transform 0.1s ease;
-}
-.buttons button:hover,
-.buttons button:active { opacity: 0.85; transform: scale(0.98); }
-.btn-primary { background-color: #3B82F6; color: #FFFFFF; }
-.btn-secondary { background-color: #22C55E; color: #FFFFFF; }
-.btn-tertiary { background-color: #374151; color: #FFFFFF; }
-
-/* Zone API */
-.api-info {
-  margin-top: 15px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  color: #FFFFFF;
-}
-.api-info img {
-  width: 100%;
-  max-width: 300px;
-  margin-top: 10px;
-  border-radius: 12px;
+body::before{
+content:"";
+position:absolute;
+width:200%;
+height:200%;
+background-image:
+linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
+linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+background-size:50px 50px;
+animation:moveLines 10s linear infinite;
+z-index:0;
 }
 
-/* Responsive */
-@media (max-width: 400px) {
-  .time-remaining { font-size: 2.4rem; }
-  .target-time { font-size: 1rem; }
-  .buttons button { padding: 12px; font-size: 0.95rem; }
-  .time-picker-popup input { width: 100%; }
-  .api-info img { max-width: 100%; }
+@keyframes moveLines{
+0%{transform:translate(0,0);}
+100%{transform:translate(-50px,-50px);}
 }
+
+.countdown-container{
+position:relative;
+z-index:1;
+display:flex;
+flex-direction:column;
+align-items:center;
+background-color:rgba(17,17,17,0.9);
+padding:25px;
+border-radius:16px;
+width:90%;
+max-width:350px;
+text-align:center;
+box-shadow:0 0 20px rgba(255,255,255,0.05);
+}
+
+.time-remaining{
+font-size:3rem;
+color:#FFFFFF;
+margin-bottom:10px;
+}
+
+.target-time{
+font-size:1.2rem;
+color:#9CA3AF;
+margin-bottom:10px;
+}
+
+.buttons{
+display:flex;
+flex-direction:column;
+gap:12px;
+width:100%;
+}
+
+.buttons button{
+padding:14px;
+border:none;
+border-radius:10px;
+font-size:1rem;
+font-weight:bold;
+cursor:pointer;
+}
+
+.btn-primary{background:#3B82F6;color:white;}
+.btn-secondary{background:#22C55E;color:white;}
+.btn-tertiary{background:#374151;color:white;}
+
+.time-picker-popup{
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%) scale(0);
+background:#1F1F1F;
+padding:20px;
+border-radius:12px;
+display:flex;
+flex-direction:column;
+gap:12px;
+z-index:999;
+opacity:0;
+transition:0.25s;
+}
+
+.time-picker-popup.show{
+transform:translate(-50%,-50%) scale(1);
+opacity:1;
+}
+
+.time-picker-popup input{
+font-size:1rem;
+padding:8px;
+border-radius:8px;
+border:none;
+text-align:center;
+}
+
+.api-info{
+margin-top:15px;
+color:white;
+}
+
+.api-info img{
+width:100%;
+max-width:300px;
+border-radius:12px;
+}
+
 </style>
 </head>
+
 <body>
+
 <div class="countdown-container">
-  <div class="time-remaining" id="timeRemaining">00:00:00</div>
-  <div class="target-time" id="targetTime">CIBLE : --:--</div>
 
-  <div class="buttons">
-    <button class="btn-primary" onclick="showTimePicker()">CHOISIR L’HEURE</button>
-    <button class="btn-secondary" onclick="startCountdown()">START</button>
-    <button class="btn-tertiary" onclick="resetCountdown()">RESET</button>
-    <button class="btn-primary" onclick="loadAPI()">CHARGER API</button>
-    <button class="btn-secondary" onclick="switchMode()">SWITCH MANUEL/API</button>
-  </div>
+<div class="time-remaining" id="timeRemaining">00:00:00</div>
+<div class="target-time" id="targetTime">CIBLE : --:--</div>
 
-  <div class="api-info">
-    <div id="apiTitle"></div>
-    <img id="apiImage" src="" alt="">
-    <div id="secondaryCountdown" style="margin-top:10px; font-size:1.2rem;"></div>
-  </div>
+<div class="buttons">
+
+<button class="btn-primary" onclick="showTimePicker()">CHOISIR HEURE</button>
+
+<button class="btn-secondary" onclick="startCountdown()">START</button>
+
+<button class="btn-tertiary" onclick="resetCountdown()">RESET</button>
+
+<button class="btn-primary" onclick="loadAPI()">CHARGER API</button>
+
+<button class="btn-secondary" onclick="switchMode()">SWITCH MANUEL/API</button>
+
 </div>
 
-<!-- Pop-up flottant pour saisir l'heure -->
+<div class="api-info">
+<div id="apiTitle"></div>
+<img id="apiImage" src="">
+</div>
+
+</div>
+
 <div class="time-picker-popup" id="timePickerPopup">
-  <input type="time" id="timeInput">
-  <button onclick="confirmTime()">Valider</button>
+
+<input type="time" id="timeInput">
+
+<button onclick="confirmTime()">Valider</button>
+
 </div>
 
 <script>
-let countdownInterval;
-let targetDate = null;
-let secondaryDate = null; // Pour API sans date
-let usingAPI = false;
-const LS_MANUAL = 'targetDateManual';
-const LS_API = 'targetDateAPI';
-let apiData = null;
 
-// Charger la date depuis localStorage
-window.addEventListener('load', () => {
-  const manual = localStorage.getItem(LS_MANUAL);
-  const api = localStorage.getItem(LS_API);
+let countdownInterval
+let targetDate=null
+let usingAPI=false
 
-  if (manual) {
-    targetDate = new Date(manual);
-    usingAPI = false;
-    updateTargetDisplay();
-    startCountdown();
-  } else if (api) {
-    targetDate = new Date(api);
-    usingAPI = true;
-    updateTargetDisplay();
-    startCountdown();
-  }
-});
+const LS_MANUAL='targetDateManual'
+const LS_API='targetDateAPI'
 
-function updateDisplay() {
-  const display = document.getElementById("timeRemaining");
-  if (!targetDate) { display.textContent = "00:00:00"; return; }
-  const now = new Date();
-  let diff = targetDate - now;
-  if (diff <= 0) {
-    display.textContent = "00:00:00";
-    clearInterval(countdownInterval);
-    if(usingAPI) localStorage.removeItem(LS_API);
-    else localStorage.removeItem(LS_MANUAL);
-    return;
-  }
-  const hours = Math.floor(diff / 1000 / 3600);
-  const minutes = Math.floor((diff / 1000 % 3600) / 60);
-  const seconds = Math.floor(diff / 1000 % 60);
-  display.textContent = `${String(hours).padStart(2,'0')}:${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}`;
+window.addEventListener('load',()=>{
+
+const manual=localStorage.getItem(LS_MANUAL)
+const api=localStorage.getItem(LS_API)
+
+if(manual){
+
+targetDate=new Date(manual)
+usingAPI=false
+updateTargetDisplay()
+startCountdown()
+
 }
 
-function showTimePicker() {
-  document.getElementById("timePickerPopup").classList.add('show');
-  document.getElementById("timeInput").focus();
+else if(api){
+
+targetDate=new Date(api)
+usingAPI=true
+updateTargetDisplay()
+startCountdown()
+
 }
 
-function hideTimePicker() {
-  document.getElementById("timePickerPopup").classList.remove('show');
+})
+
+function updateDisplay(){
+
+const display=document.getElementById("timeRemaining")
+
+if(!targetDate){
+
+display.textContent="00:00:00"
+return
+
 }
 
-function confirmTime() {
-  const timeValue = document.getElementById("timeInput").value;
-  if (!timeValue) return;
-  const [h,m] = timeValue.split(":").map(Number);
-  const now = new Date();
-  targetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
-  if (targetDate < now) targetDate.setDate(targetDate.getDate() +1);
-  usingAPI = false;
-  localStorage.setItem(LS_MANUAL,targetDate.toString());
-  updateTargetDisplay();
-  hideTimePicker();
-  updateDisplay();
+const now=new Date()
+let diff=targetDate-now
+
+if(diff<=0){
+
+display.textContent="00:00:00"
+clearInterval(countdownInterval)
+
+return
+
 }
 
-function startCountdown() {
-  if (!targetDate) { alert("Choisissez d'abord une heure ou une API !"); return; }
-  clearInterval(countdownInterval);
-  updateDisplay();
-  countdownInterval = setInterval(updateDisplay,1000);
+const h=Math.floor(diff/1000/3600)
+const m=Math.floor((diff/1000%3600)/60)
+const s=Math.floor(diff/1000%60)
+
+display.textContent=
+String(h).padStart(2,'0')+":"+
+String(m).padStart(2,'0')+":"+
+String(s).padStart(2,'0')
+
 }
 
-function resetCountdown() {
-  clearInterval(countdownInterval);
-  targetDate = null;
-  secondaryDate = null;
-  usingAPI = false;
-  document.getElementById("timeRemaining").textContent = "00:00:00";
-  document.getElementById("targetTime").textContent = "CIBLE : --:--";
-  document.getElementById("apiTitle").textContent = "";
-  document.getElementById("apiImage").src = "";
-  document.getElementById("secondaryCountdown").textContent = "";
-  hideTimePicker();
-  localStorage.removeItem(LS_MANUAL);
-  localStorage.removeItem(LS_API);
+function startCountdown(){
+
+if(!targetDate){
+
+alert("Choisissez une heure ou une API")
+
+return
+
 }
 
-// -----------------------
-// SWITCH MANUEL/API
-// -----------------------
-function switchMode() {
-  if(usingAPI && localStorage.getItem(LS_MANUAL)) {
-    targetDate = new Date(localStorage.getItem(LS_MANUAL));
-    usingAPI = false;
-  } else if(!usingAPI && localStorage.getItem(LS_API)) {
-    targetDate = new Date(localStorage.getItem(LS_API));
-    usingAPI = true;
-  } else {
-    alert("Pas d'autre mode disponible à switcher !");
-    return;
-  }
-  updateTargetDisplay();
+clearInterval(countdownInterval)
+
+updateDisplay()
+
+countdownInterval=setInterval(updateDisplay,1000)
+
 }
 
-// -----------------------
-// LOAD API DYNAMIQUE
-// -----------------------
-async function loadAPI() {
-    try {
-        let url = prompt("Entrez l'URL du JSON de l'API:", "evenements.json");
-        if (!url) return;
+function resetCountdown(){
 
-        let useProxy = false;
-        let res;
-        try { res = await fetch(url); } 
-        catch(e) { useProxy = true; }
+clearInterval(countdownInterval)
 
-        let data;
-        if(useProxy){
-            const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(url);
-            res = await fetch(proxy);
-            const textData = await res.text();
-            const proxyData = JSON.parse(textData);
-            data = JSON.parse(proxyData.contents);
-        } else {
-            data = await res.json();
-        }
+targetDate=null
 
-        // Vérifier qu'on a bien un champ date
-        let dateStr = data.date_utc || data.date || data.datetime;
-        if(dateStr){
-            targetDate = new Date(dateStr);
-            if(isNaN(targetDate)) throw "Date invalide";
-            usingAPI = true;
-            localStorage.setItem(LS_API,targetDate.toString());
-            document.getElementById("secondaryCountdown").textContent = "";
-        } else {
-            secondaryDate = new Date(); // compteur secondaire libre
-            document.getElementById("secondaryCountdown").textContent = "API chargée mais aucune date trouvée";
-            console.warn("API chargée sans date valide");
-        }
+document.getElementById("timeRemaining").textContent="00:00:00"
 
-        if(data.name) document.getElementById("apiTitle").textContent = data.name;
-        if(data.image) document.getElementById("apiImage").src = data.image;
+document.getElementById("targetTime").textContent="CIBLE : --:--"
 
-        updateTargetDisplay();
-        startCountdown();
+document.getElementById("apiTitle").textContent=""
 
-    } catch(e){
-        alert("Erreur chargement API ou URL invalide");
-        console.error(e);
-    }
+document.getElementById("apiImage").src=""
+
+localStorage.removeItem(LS_MANUAL)
+localStorage.removeItem(LS_API)
+
 }
 
-// -----------------------
+function showTimePicker(){
+
+document.getElementById("timePickerPopup").classList.add('show')
+
+}
+
+function confirmTime(){
+
+const val=document.getElementById("timeInput").value
+
+if(!val)return
+
+const [h,m]=val.split(":")
+
+const now=new Date()
+
+targetDate=new Date(now.getFullYear(),now.getMonth(),now.getDate(),h,m)
+
+if(targetDate<now)targetDate.setDate(targetDate.getDate()+1)
+
+usingAPI=false
+
+localStorage.setItem(LS_MANUAL,targetDate)
+
+updateTargetDisplay()
+
+startCountdown()
+
+document.getElementById("timePickerPopup").classList.remove('show')
+
+}
+
+function switchMode(){
+
+const manual=localStorage.getItem(LS_MANUAL)
+
+const api=localStorage.getItem(LS_API)
+
+if(usingAPI && manual){
+
+targetDate=new Date(manual)
+usingAPI=false
+
+}
+
+else if(!usingAPI && api){
+
+targetDate=new Date(api)
+usingAPI=true
+
+}
+
+updateTargetDisplay()
+
+}
+
 function updateTargetDisplay(){
-  document.getElementById("targetTime").textContent = targetDate ? "CIBLE : " + targetDate.toTimeString().slice(0,5) : "CIBLE : --:--";
+
+document.getElementById("targetTime").textContent=
+"CIBLE : "+targetDate.toTimeString().slice(0,5)
+
 }
+
+/* -------- API ULTRA COMPATIBLE -------- */
+
+async function loadAPI(){
+
+try{
+
+let url=prompt("URL API JSON")
+
+if(!url)return
+
+let res=await fetch(url)
+
+let data=await res.json()
+
+let foundDates=[]
+
+function extractDates(obj){
+
+for(let key in obj){
+
+let val=obj[key]
+
+if(typeof val==="string"){
+
+let d=new Date(val)
+
+if(!isNaN(d))foundDates.push(d)
+
+}
+
+if(typeof key==="string"){
+
+let dk=new Date(key)
+
+if(!isNaN(dk))foundDates.push(dk)
+
+}
+
+if(typeof val==="object")extractDates(val)
+
+}
+
+}
+
+extractDates(data)
+
+if(foundDates.length===0){
+
+alert("Aucune date trouvée dans API")
+
+return
+
+}
+
+let now=new Date()
+
+let future=foundDates.filter(d=>d>now)
+
+if(future.length===0){
+
+alert("Toutes les dates sont passées")
+
+return
+
+}
+
+future.sort((a,b)=>a-b)
+
+targetDate=future[0]
+
+usingAPI=true
+
+localStorage.setItem(LS_API,targetDate)
+
+updateTargetDisplay()
+
+startCountdown()
+
+}
+catch(e){
+
+alert("Erreur API")
+
+console.error(e)
+
+}
+
+}
+
 </script>
+
 </body>
-</html> 
+</html>
