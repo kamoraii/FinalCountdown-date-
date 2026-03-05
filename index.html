@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Favicon pour navigateur et écran d’accueil -->
-<link rel="icon" type="image/jpeg" href="icone_site.jpeg">
+<link rel="icon" type="image/png" href="icone_site.jpeg">
 <link rel="apple-touch-icon" sizes="180x180" href="icone_site.jpeg">
 
 <title>Combien de temps y me reste ?</title>
@@ -165,6 +165,7 @@ body::before {
   <div class="api-info">
     <div id="apiTitle"></div>
     <img id="apiImage" src="" alt="">
+    <div id="secondaryCountdown" style="margin-top:10px; font-size:1.2rem;"></div>
   </div>
 </div>
 
@@ -177,10 +178,10 @@ body::before {
 <script>
 let countdownInterval;
 let targetDate = null;
+let secondaryDate = null; // Pour API sans date
 let usingAPI = false;
 const LS_MANUAL = 'targetDateManual';
 const LS_API = 'targetDateAPI';
-const LS_APIURL = 'apiUrl';
 let apiData = null;
 
 // Charger la date depuis localStorage
@@ -236,9 +237,9 @@ function confirmTime() {
   targetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, 0);
   if (targetDate < now) targetDate.setDate(targetDate.getDate() +1);
   usingAPI = false;
+  localStorage.setItem(LS_MANUAL,targetDate.toString());
   updateTargetDisplay();
   hideTimePicker();
-  localStorage.setItem(LS_MANUAL,targetDate.toString());
   updateDisplay();
 }
 
@@ -252,18 +253,21 @@ function startCountdown() {
 function resetCountdown() {
   clearInterval(countdownInterval);
   targetDate = null;
+  secondaryDate = null;
+  usingAPI = false;
   document.getElementById("timeRemaining").textContent = "00:00:00";
   document.getElementById("targetTime").textContent = "CIBLE : --:--";
   document.getElementById("apiTitle").textContent = "";
   document.getElementById("apiImage").src = "";
-  usingAPI = false;
+  document.getElementById("secondaryCountdown").textContent = "";
   hideTimePicker();
   localStorage.removeItem(LS_MANUAL);
   localStorage.removeItem(LS_API);
-  localStorage.removeItem(LS_APIURL);
 }
 
+// -----------------------
 // SWITCH MANUEL/API
+// -----------------------
 function switchMode() {
   if(usingAPI && localStorage.getItem(LS_MANUAL)) {
     targetDate = new Date(localStorage.getItem(LS_MANUAL));
@@ -276,10 +280,11 @@ function switchMode() {
     return;
   }
   updateTargetDisplay();
-  updateDisplay();
 }
 
+// -----------------------
 // LOAD API DYNAMIQUE
+// -----------------------
 async function loadAPI() {
     try {
         let url = prompt("Entrez l'URL du JSON de l'API:", "evenements.json");
@@ -287,11 +292,8 @@ async function loadAPI() {
 
         let useProxy = false;
         let res;
-        try {
-            res = await fetch(url);
-        } catch (e) {
-            useProxy = true;
-        }
+        try { res = await fetch(url); } 
+        catch(e) { useProxy = true; }
 
         let data;
         if(useProxy){
@@ -306,26 +308,20 @@ async function loadAPI() {
 
         // Vérifier qu'on a bien un champ date
         let dateStr = data.date_utc || data.date || data.datetime;
-        if(!dateStr){
-            alert("JSON trouvé mais aucune date compatible (date_utc, date ou datetime) !");
-            console.error(data);
-            return;
+        if(dateStr){
+            targetDate = new Date(dateStr);
+            if(isNaN(targetDate)) throw "Date invalide";
+            usingAPI = true;
+            localStorage.setItem(LS_API,targetDate.toString());
+            document.getElementById("secondaryCountdown").textContent = "";
+        } else {
+            secondaryDate = new Date(); // compteur secondaire libre
+            document.getElementById("secondaryCountdown").textContent = "API chargée mais aucune date trouvée";
+            console.warn("API chargée sans date valide");
         }
-
-        targetDate = new Date(dateStr);
-        if(isNaN(targetDate)){
-            alert("Date invalide dans le JSON !");
-            console.error(data);
-            return;
-        }
-
-        usingAPI = true;
-        localStorage.setItem(LS_API,targetDate.toString());
-        localStorage.setItem(LS_APIURL,url);
 
         if(data.name) document.getElementById("apiTitle").textContent = data.name;
         if(data.image) document.getElementById("apiImage").src = data.image;
-        else document.getElementById("apiImage").src = "";
 
         updateTargetDisplay();
         startCountdown();
@@ -336,13 +332,9 @@ async function loadAPI() {
     }
 }
 
-// Affichage cible
+// -----------------------
 function updateTargetDisplay(){
-  if(!targetDate) {
-    document.getElementById("targetTime").textContent = "CIBLE : --:--";
-    return;
-  }
-  document.getElementById("targetTime").textContent = "CIBLE : " + targetDate.toTimeString().slice(0,5);
+  document.getElementById("targetTime").textContent = targetDate ? "CIBLE : " + targetDate.toTimeString().slice(0,5) : "CIBLE : --:--";
 }
 </script>
 </body>
